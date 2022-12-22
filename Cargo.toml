@@ -1,0 +1,21 @@
+[package]
+name = "advent_of_code_2022"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+publish = false
+default-run = "default"
+
+# Can be used to compile the binaries more explicitly
+# For example to point at specific folder.
+# Multiple binaries can exist here, and even alongside libraries.
+[[bin]]
+name = "default"
+path = "src/main.rs"
+
+[dependencies]
+proc_macro_lib = { path = "proc_macro_lib" }
+reqwest = { version = "0.11.13", features = ["blocking"] }
+include_optional = "1.0"
