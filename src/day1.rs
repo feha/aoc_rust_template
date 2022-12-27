@@ -6,42 +6,91 @@ use crate::utils::*; // needs to use crate, refers to crate populated by main.rs
 
 use proc_macro_lib;
 
-proc_macro_lib::impl_day!(
 
-fn main() -> Result<(), ()> {
-    println!("hello day!");
-    return Ok(());
-}
-
-part 1
-(input: &str) -> isize {
-    // println!("{}", input);
-    let solution = input.lines()
+fn part_1(input: &str) -> Result<isize, String> {
+    let solution = input
+        .lines()
         .map(|s| s.parse::<isize>().unwrap())
-        .fold(0, |sum, x| sum + x );
-    
+        .fold(0, |sum, x| sum + x);
+
     return Ok(solution);
 }
 
-part 2
-(input: &str) -> isize {
-    let solution = input.lines()
+fn part_2(input: &str) -> Result<isize, String> {
+    let solution = input
+        .lines()
         .map(|s| s.parse::<isize>().unwrap())
-        .fold(0, |sum, x| sum + x );
-    
+        .fold(0, |sum, x| sum + x);
+
     return Ok(solution);
 }
 
-test 1
-assert("" , "")
-("" , 0)
 
-test 2
-("" , 0)
-("" , 0)
+fn test_helper_1(s : & str, v : isize) {
+    assert_eq! (part_1(s).unwrap(), v) ;
+}
+fn test_helper_2(s : & str, v : isize) {
+    assert_eq! (part_2(s).unwrap(), v) ;
+}
+
+fn test_1() {
+    assert_eq!("", "");
+    test_helper_1("", 0);
+}
+fn test_2() {
+    assert_eq!("", "");
+    test_helper_1("", 0);
+}
+
+proc_macro_lib::impl_day_2!(
+
+part 1 part_1
+test 1 test_1
+
+part 2 part_2
+test 2 test_2
 
 );
 
+// Surprisingly, compiler errors in the "pseudo code" of this macro is expressed properly by vscode.
+// Example is changing the type of part 1's function, highlighting it's return value and the tests,
+// giving the proper error about incorrect type.
+//
+// proc_macro_lib::impl_day!(
+// 
+// fn main() -> Result<(), ()> {
+//     println!("hello day!");
+//     return Ok(());
+// }
+// 
+// part 1
+// (input: &str) -> isize {
+//     // println!("{}", input);
+//     let solution = input.lines()
+//         .map(|s| s.parse::<isize>().unwrap())
+//         .fold(0, |sum, x| sum + x );
+//     
+//     return Ok(solution);
+// }
+// 
+// part 2
+// (input: &str) -> isize {
+//     let solution = input.lines()
+//         .map(|s| s.parse::<isize>().unwrap())
+//         .fold(0, |sum, x| sum + x );
+//     
+//     return Ok(solution);
+// }
+// 
+// test 1
+// assert("" , "")
+// ("" , 0)
+// 
+// test 2
+// ("" , 0)
+// ("" , 0)
+// 
+// );
 
 
 // Expands to:

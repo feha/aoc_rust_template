@@ -242,6 +242,29 @@ impl Parse for DayParser {
     }
 }
 
+
+
+// Surprisingly, compiler errors in the "pseudo code" of macro's is expressed properly by vscode.
+// Example is changing the type of part 1's function, highlighting it's return value and the tests,
+// giving the proper error about incorrect type.
+//
+// proc_macro_lib::impl_day!(
+// 
+// part 1
+// (input: &str) -> &str { // <-- made to incorrectly expect &str
+//     // println!("{}", input);
+//     let solution = input.lines()
+//         .map(|s| s.parse::<isize>().unwrap())
+//         .fold(0, |sum, x| sum + x );
+//     
+//     return Ok(solution); // <-- 'solution' mismatched types: expected `&str`, found `isize`
+// }
+// 
+// test 1
+// assert("" , "")
+// ("" , 0) // <-- '0' mismatched types: expected `&str`, found integer
+// 
+// );
 #[proc_macro]
 pub fn impl_day(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut stream = TokenStream::new();
@@ -326,6 +349,160 @@ pub fn impl_day(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
             impl #day_padded_upper {
                 #impl_part
+            }
+
+            #[cfg(test)]
+            mod tests {
+                use super::*;
+
+                #test_part
+            }
+        });
+
+    } else {
+        // don't generate anything
+        println!("Tried to implement Day for a file with malformed name: file = \"{}\" , re = \"{:?}\"", file, re);
+    }
+
+    // println!("return\n{}", proc_macro::TokenStream::from(stream.clone()).to_string());
+
+    return proc_macro::TokenStream::from(stream);
+}
+
+
+#[derive(Debug, Default)]
+struct Part2 {
+    ident: Option<Ident>,
+    // ty: Option<syn::Type>,
+    // block: Option<Group>, // syn::token::Brace
+    tests: Vec<Ident>,
+}
+#[derive(Debug, Default)]
+struct DayParser2 {
+    parts: HashMap<usize, Part2>,
+}
+impl Parse for DayParser2 {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let mut day_parser = DayParser2::default();
+
+        while !input.is_empty() {
+            // 'part \d+ Ident' || 'test \d+ ident+'
+            let pre = input.parse::<Ident>()?;
+            let n = input.parse::<Literal>()?;
+            // if let Ok(pre) = input.parse::<Ident>() { // "part"
+                // if let Ok(n) = input.parse::<Literal>() {
+                    let id = n.to_string().parse().expect(("Expected an integer, received ".to_owned() + n.to_string().as_str()).as_str());
+                    let part = day_parser.parts.entry(id).or_default();
+                    match pre.to_string().as_str() {
+                        "part" => {
+                            let fn_ident = input.parse::<Ident>()?;
+                            part.ident = Some(fn_ident);
+                            // if let Ok(fn_ident) = ident {
+                            //     part.ident = Some(fn_ident);
+                            // } else {
+                            //     return Err(syn::Error::new(ident.span() , "This macro expected an Ident for this token: 'Ident Literal _token_'"));
+                            // }
+                        },
+                        "test" => {
+                            let mut not_a_prefix = true;
+                            let lookahead = input.fork();
+                            while !lookahead.is_empty() && not_a_prefix {
+                                let ident = lookahead.parse::<Ident>()?;
+                                // if let Ok(ident) = lookahead.parse::<Ident>() {
+                                    match ident.to_string().as_str() {
+                                        "part" => not_a_prefix = false,
+                                        "test" => not_a_prefix = false,
+                                        _ => {
+                                            input.parse::<Ident>()?; // catch up to lookahead
+                                            part.tests.push(ident);
+                                        },
+                                    }
+                                // } else {
+                                //     return Err("This macro expected an Ident for this token: 'Ident Literal _token_+'");
+                                // }
+                            }
+                        },
+                        _ => return Err(syn::Error::new(pre.span() , "This macro expected 'part' or 'test' for this token: '_token_ Literal Ident+'")),
+                    }
+                // } else {
+                //     return Err("This macro expected a Literal (int) for this token: 'Ident _token_ Ident+'");
+                // }
+            // } else {
+            //     return Err("This macro expected an Ident for this token: '_token_ Literal Ident+'");
+            // }
+
+        }
+
+        return Ok(day_parser);
+    }
+}
+// A version of the above, where the 'unnecessary' parts are not pseudo-coded as macro argument.
+// Instead user writes proper functions, and instead pass 'references' (Ident's) to the functions.
+// This should make IDE's have an easier time showing errors (even if current VSCode has no issues),
+// and users able to code in a familiar environ & indentation.
+// And overall lowers complexity so unexpected bugs should be less likely to exist.
+//
+// fn foo(&self, _input: &str) -> Result<isize, String> {
+//     return Ok(0);
+// }
+// fn bar_helper(s : & str, v : isize) {
+//     assert_eq! (Day01 {}.foo(s).unwrap(), v) ;
+// }
+// fn bar() {
+//     assert_eq!("", "");
+//     bar_helper("", 0);
+// }
+// proc_macro_lib::impl_day_2!(
+//     part 1
+//     foo
+// 
+//     test 1
+//     bar
+// );
+#[proc_macro]
+pub fn impl_day_2(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let mut stream = TokenStream::new();
+    
+    let span = proc_macro::Span::call_site();
+    let binding = span.source_file().path();
+    let file = binding.to_str().unwrap();
+    let re = Regex::new(r".*day(\d+).rs").unwrap();
+    let caps = re.captures(file);
+    if let Some(caps) = caps {
+        let n: u32 = caps.get(1).unwrap().as_str().parse().unwrap();
+        let day_padded_upper = format!("Day{:0>2}", n).parse::<TokenStream>().unwrap();
+
+        let day_parser = syn::parse_macro_input!(input as DayParser2);
+
+        let mut trait_part = TokenStream::new();
+        let mut test_part = TokenStream::new();
+        for (i, part) in day_parser.parts {
+            // let part_impl_ident = format!("part_{}", i).parse::<TokenStream>().unwrap();
+            let part_ident = part.ident;
+
+            trait_part.extend(quote!{
+                fn #part_ident(&self, input: &str) -> Result<String, ()> {
+                    return Ok(format!("Part {}: {:?}", #i, #part_ident(input)));
+                }
+            });
+
+            for (test_n, test) in part.tests.iter().enumerate() {
+                let test_ident = format!("test_{}_{}", i, test_n).parse::<TokenStream>().unwrap();
+                test_part.extend(quote!{
+                    #[test]
+                    fn #test_ident() {
+                        #test()
+                    }
+                });
+            }
+        }
+        
+        stream.extend(quote!{
+            #[derive(Debug)]
+            pub struct #day_padded_upper {}
+
+            impl Day for #day_padded_upper {
+                #trait_part
             }
 
             #[cfg(test)]
