@@ -6,6 +6,7 @@ use std::process;
 
 use reqwest;
 use reqwest::header::COOKIE;
+use std::fs;
 
 // files (and folders?) are implicit modules(?)
 // "'mod'  looks for the 'foo' module in 'foo.rs' or 'foo/mod.rs'."
@@ -96,22 +97,74 @@ pub fn hello_utils() {
     println!("Hello, utils!");
 }
 
+const YEAR: isize =  2021;
+const PATH_SESSION: &str = "./res/.SESSION";
+const PATH_INPUTS: &str =  "./res/inputs/";
+const URL_AOC: &str =  "https://adventofcode.com/";
+const URL_AOC_DAY: &str =  "/day/";
+const URL_AOC_INPUT: &str =  "/input";
+// const URL_AOC_INPUT: &str =  "https://adventofcode.com/{}/day/{}/input";
+
 pub fn get_session() -> String {
     return include_str!("../res/.SESSION").to_owned();
 }
 
-pub fn get_input(day: usize) -> String {
-    let url = format!("https://adventofcode.com/2021/day/{}/input", day);
-    
+pub fn get_input_from_aoc(day: usize) -> String {
+    println!("Fetching input for day {} from AoC.", day);
+    let url = format!("{}{}{}{}{}", URL_AOC, YEAR, URL_AOC_DAY, day, URL_AOC_INPUT);
+    let path = format!("{}day{}", PATH_INPUTS, day);
+
     let client = reqwest::blocking::Client::new();
-    let text = client.get(&url)
+    let text = client.get(url.as_str())
         .header(COOKIE, format!("session={}", get_session()))
         .send()
         .unwrap()
         .text()
         .unwrap();
+
+    // Cache input in a file.
+    println!("Success! Caching input for day {} in a file", day);
+    // match fs::write(path, &text) {
+    //     Ok(_) => todo(),// TODO success, do anything?
+    //     Err(e) => eprintln!("ERROR! Failed to cache input for day {}, with error: {}", day, e),
+    // }
+    if let Err(e) = fs::write(path, &text) {
+        eprintln!("Error when trying to cache input for day {}. Failed with error: '{}'", day, e);
+    }
     
     return text;
+}
+
+pub fn get_input(day: usize) -> String {
+    println!("Retrieving input for day {}.", day);
+    let path = format!("{}day{}", PATH_INPUTS, day);
+
+    // let mut text = String::new();
+    // if let Ok(file) = fs::File::open(&path) {
+    //     println!("Found cached input for day {}. Reading contents.", day);
+    //     // File exists! Use the cached input instead of badgering AoC.
+    //     let mut buf_reader = BufReader::new(file);
+    //     if let Err(_) = buf_reader.read_to_string(&mut text) { // read contents into `text`
+    //         eprintln!("ERROR! Unable to read cached input for day {}.", day);
+    //         text = get_input_from_aoc(day); // Use AoC as backup, anyway, if it fails.
+    //     }
+    // } else { // input not fetched yet. GET from AoC
+    //     println!("WARNING! Cached input not found for day {}.", day);
+    //     text = get_input_from_aoc(day);
+    // }
+    // return text;
+    return match fs::read_to_string(path) {
+        Ok(str) => {
+            println!("Succesfully read cached input for day {}.", day);
+            str
+        },
+        Err(e) => {
+            eprintln!("Error when trying to read cached input for day {}. Failed with error: '{}'", day, e);
+             // Fetch (& cache) input from AoC when unable to retrieve a cached copy.
+            get_input_from_aoc(day)
+        },
+    };
+    
 }
 
 pub trait Day: std::fmt::Debug {
