@@ -7,7 +7,7 @@ name = "advent_of_code_2022"
 version = "0.1.0"
 dependencies = [
  "include_optional",
- "proc_macro_lib",
+ "proc_macro_days",
  "reqwest",
 ]
 
@@ -494,16 +494,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160"
 
 [[package]]
-name = "prettyplease"
-version = "0.1.22"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c8992a85d8e93a28bdf76137db888d3874e3b230dee5ed8bebac4c9f7617773"
-dependencies = [
- "proc-macro2",
- "syn",
-]
-
-[[package]]
 name = "proc-macro2"
 version = "1.0.49"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -513,11 +503,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "proc_macro_lib"
+name = "proc_macro_days"
 version = "0.1.0"
 dependencies = [
  "glob",
- "prettyplease",
  "proc-macro2",
  "quote",
  "regex",

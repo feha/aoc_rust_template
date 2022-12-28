@@ -3,7 +3,7 @@
 #![feature(proc_macro_span)]
 
 use proc_macro;
-use proc_macro2::{TokenStream, TokenTree, Group, Ident, Literal};
+use proc_macro2::{TokenStream, TokenTree, Group, Ident, Literal, Punct};
 
 use syn;
 use syn::parse::{Parse, ParseStream};
@@ -442,11 +442,11 @@ impl Parse for DayParser2 {
 // and users able to code in a familiar environ & indentation.
 // And overall lowers complexity so unexpected bugs should be less likely to exist.
 //
-// fn foo(&self, _input: &str) -> Result<isize, String> {
+// fn foo(_input: &str) -> Result<isize, String> {
 //     return Ok(0);
 // }
 // fn bar_helper(s : & str, v : isize) {
-//     assert_eq! (Day01 {}.foo(s).unwrap(), v) ;
+//     assert_eq! (foo(s).unwrap(), v) ;
 // }
 // fn bar() {
 //     assert_eq!("", "");
@@ -516,6 +516,90 @@ pub fn impl_day_2(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     } else {
         // don't generate anything
         println!("Tried to implement Day for a file with malformed name: file = \"{}\" , re = \"{:?}\"", file, re);
+    }
+
+    // println!("return\n{}", proc_macro::TokenStream::from(stream.clone()).to_string());
+
+    return proc_macro::TokenStream::from(stream);
+}
+
+#[derive(Debug, Default)]
+struct DayParser3 {
+    parts: HashMap<usize, Ident>,
+}
+impl Parse for DayParser3 {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let mut day_parser = DayParser3::default();
+
+        let mut i = 0;
+        while !input.is_empty() {
+            i += 1;
+            let fn_ident = input.parse::<Ident>()?;
+            input.parse::<syn::token::Comma>(); // Optional, Ok vs Err doesn't matter. Just consume if it exists.
+            day_parser.parts.insert(i, fn_ident);
+        }
+
+        return Ok(day_parser);
+    }
+}
+// A version of the above, where the macro is designed to look like a regular function call
+// rather than a TokenStream, and simplified to replace the smallest possible amount of code.
+// It only expands to a `struct Day#` implementing `Day`,
+// effectively linking the passed functions to main.rs.
+//
+// fn part1(_input: &str) -> Result<isize, String> {
+//     return Ok(0);
+// }
+// impl_day_3!( part1, ... );
+#[proc_macro]
+pub fn impl_day_3(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let mut stream = TokenStream::new();
+    
+    let span = proc_macro::Span::call_site();
+    let binding = span.source_file().path();
+    let file = binding.to_str().unwrap();
+    let re = Regex::new(r".*day(\d+).rs").unwrap();
+    let caps = re.captures(file);
+    if let Some(caps) = caps {
+        let n: u32 = caps.get(1).unwrap().as_str().parse().unwrap();
+        let day_padded_upper = format!("Day{:0>2}", n).parse::<TokenStream>().unwrap();
+
+        let day_parser = syn::parse_macro_input!(input as DayParser3);
+        let mut trait_parts = TokenStream::new();
+
+        for (k, fn_ident) in day_parser.parts.into_iter() {
+            let trait_part_ident = format!("part_{}", k).parse::<TokenStream>().unwrap();
+            trait_parts.extend(quote!{
+                fn #trait_part_ident(&self, input: &str) -> Result<String, ()> {
+                    return Ok(format!("Part {}: {:?}", #k, #fn_ident(input)));
+                }
+            });
+        }
+        // for (i, tt) in input.into_iter().enumerate() {
+        //     if let proc_macro::TokenTree::Ident(fn_ident) = tt {
+        //         let trait_part_ident = proc_macro::Ident::new(format!("part_{}", i).as_str(), span);
+        //         trait_parts.extend(quote!{
+        //             fn #trait_part_ident(&self, input: &str) -> Result<String, ()> {
+        //                 return Ok(format!("Part {}: {:?}", #i, #fn_ident(input)));
+        //             }
+        //         });
+        //     }
+        // }
+        
+        stream.extend(quote!{
+            #[derive(Debug)]
+            pub struct #day_padded_upper {}
+
+            impl Day for #day_padded_upper {
+                #trait_parts
+            }
+        });
+
+    } else {
+        // don't generate anything
+        let str = format!("Tried to implement Day for a file with malformed name: file = \"{}\" , re = \"{:?}\"", file, re);
+        println!("{}", str);
+        // compile_error!(str);
     }
 
     // println!("return\n{}", proc_macro::TokenStream::from(stream.clone()).to_string());

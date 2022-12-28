@@ -4,17 +4,16 @@
 
 use std::env;
 
-use proc_macro_lib;
-
 mod utils; // imports utils.rs (needed as its not in .toml)
 use utils::*;
 
-proc_macro_lib::import_days!();
+use proc_macro_days;
+proc_macro_days::import_days!();
 
 
 fn main() -> Result<(), ()> {
 
-    let days = proc_macro_lib::instantiate_days!();
+    let days = proc_macro_days::instantiate_days!();
     
     let mut args = env::args();
     let _binary_path = args.next();

@@ -16,6 +16,6 @@ name = "default"
 path = "src/main.rs"
 
 [dependencies]
-proc_macro_lib = { path = "proc_macro_lib" }
+proc_macro_days = { path = "proc_macro_days" }
 reqwest = { version = "0.11.13", features = ["blocking"] }
 include_optional = "1.0"
