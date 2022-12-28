@@ -6,6 +6,7 @@ use std::process;
 use reqwest;
 use reqwest::header::COOKIE;
 use std::fs;
+use std::path::Path;
 
 
 pub fn hello_utils() {
@@ -27,7 +28,8 @@ pub fn get_session() -> String {
 pub fn get_input_from_aoc(day: usize) -> String {
     println!("Fetching input for day {} from AoC.", day);
     let url = format!("{}{}{}{}{}", URL_AOC, YEAR, URL_AOC_DAY, day, URL_AOC_INPUT);
-    let path = format!("{}day{}", PATH_INPUTS, day);
+    let path = format!("{}{}/day{}", PATH_INPUTS, YEAR, day);
+    let path = Path::new(path.as_str());
 
     let client = reqwest::blocking::Client::new();
     let text = client.get(url.as_str())
@@ -39,9 +41,19 @@ pub fn get_input_from_aoc(day: usize) -> String {
 
     // Cache input in a file.
     println!("Success! Caching input for day {} in a file", day);
-    // match fs::write(path, &text) {
-    //     Ok(_) => todo(), // success, do anything?
-    //     Err(e) => eprintln!("ERROR! Failed to cache input for day {}, with error: {}", day, e),
+    if let Some(parent) = path.parent() {
+        if let Err(e) = fs::create_dir_all(parent) {
+            eprintln!("Error when trying to create directories. Failed with error: '{}'", e);
+        }
+    }
+    // match File::create(path) {
+    //     Ok(mut file) => {
+    //         
+    //         if let Err(e) = file.write_all(text.as_bytes()) {
+    //             eprintln!("Error when trying to cache input for day {}. Failed with error: '{}'", day, e);
+    //         }
+    //     },
+    //     Err(e) =>  eprintln!("Error when trying to create input-cache for day {}. Failed with error: '{}'", day, e),
     // }
     if let Err(e) = fs::write(path, &text) {
         eprintln!("Error when trying to cache input for day {}. Failed with error: '{}'", day, e);
@@ -52,7 +64,8 @@ pub fn get_input_from_aoc(day: usize) -> String {
 
 pub fn get_input(day: usize) -> String {
     println!("Retrieving input for day {}.", day);
-    let path = format!("{}day{}", PATH_INPUTS, day);
+    let path = format!("{}{}/day{}", PATH_INPUTS, YEAR, day);
+    let path = Path::new(path.as_str());
 
     // let mut text = String::new();
     // if let Ok(file) = fs::File::open(&path) {
