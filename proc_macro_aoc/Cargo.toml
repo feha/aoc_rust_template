@@ -1,5 +1,5 @@
 [package]
-name = "proc_macro_days"
+name = "proc_macro_aoc"
 version = "0.1.0"
 edition = "2021"
 

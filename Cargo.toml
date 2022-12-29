@@ -1,5 +1,5 @@
 [package]
-name = "advent_of_code_2022"
+name = "aoc_rust_template"
 version = "0.1.0"
 edition = "2021"
 
@@ -17,5 +17,5 @@ path = "src/main.rs"
 
 [dependencies]
 reqwest = { version = "0.11.13", features = ["blocking"] }
-proc_macro_days = { path = "proc_macro_days" }
+proc_macro_aoc = { path = "proc_macro_aoc" }
 include_optional = "1.0"

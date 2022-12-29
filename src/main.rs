@@ -7,13 +7,13 @@ use std::env;
 mod utils; // imports utils.rs (needed as its not in .toml)
 use utils::*;
 
-use proc_macro_days;
-proc_macro_days::import_days!();
+use proc_macro_aoc;
+proc_macro_aoc::import_days!();
 
 
 fn main() -> Result<(), ()> {
 
-    let days = proc_macro_days::instantiate_days!();
+    let days = proc_macro_aoc::instantiate_days!();
     
     let mut args = env::args();
     let _binary_path = args.next();

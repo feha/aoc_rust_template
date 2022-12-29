@@ -6,8 +6,8 @@ use crate::utils::*; // needs to use crate, refers to crate populated by main.rs
 
 // Creates struct for Day#, implementing Day trait.
 // Thus links passed functions to main.rs (as it has macros instantiating Day# structs for each Day#.rs file).
-use proc_macro_days;
-proc_macro_days::impl_day!(part_1, part_2);
+use proc_macro_aoc;
+proc_macro_aoc::impl_day!(part_1, part_2);
 
 
 // Implementations
