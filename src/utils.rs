@@ -13,7 +13,6 @@ pub fn hello_utils() {
     println!("Hello, utils!");
 }
 
-const YEAR: isize =  2021;
 const PATH_SESSION: &str = "./res/.SESSION";
 const PATH_INPUTS: &str =  "./res/inputs/";
 const URL_AOC: &str =  "https://adventofcode.com/";
@@ -25,9 +24,9 @@ pub fn get_session() -> String {
     return include_str!("../res/.SESSION").to_owned();
 }
 
-pub fn get_input_from_aoc(day: usize) -> String {
+pub fn get_input_from_aoc(year: usize, day: usize) -> String {
     println!("Fetching input for day {} from AoC.", day);
-    let url = format!("{}{}{}{}{}", URL_AOC, YEAR, URL_AOC_DAY, day, URL_AOC_INPUT);
+    let url = format!("{}{}{}{}{}", URL_AOC, year, URL_AOC_DAY, day, URL_AOC_INPUT);
     let path = format!("{}{}/day{}", PATH_INPUTS, YEAR, day);
     let path = Path::new(path.as_str());
 
@@ -62,9 +61,9 @@ pub fn get_input_from_aoc(day: usize) -> String {
     return text;
 }
 
-pub fn get_input(day: usize) -> String {
+pub fn get_input(year: usize, day: usize) -> String {
     println!("Retrieving input for day {}.", day);
-    let path = format!("{}{}/day{}", PATH_INPUTS, YEAR, day);
+    let path = format!("{}{}/day{}", PATH_INPUTS, year, day);
     let path = Path::new(path.as_str());
 
     // let mut text = String::new();
@@ -89,7 +88,7 @@ pub fn get_input(day: usize) -> String {
         Err(e) => {
             eprintln!("Error when trying to read cached input for day {}. Failed with error: '{}'", day, e);
              // Fetch (& cache) input from AoC when unable to retrieve a cached copy.
-            get_input_from_aoc(day)
+            get_input_from_aoc(year, day)
         },
     };
     

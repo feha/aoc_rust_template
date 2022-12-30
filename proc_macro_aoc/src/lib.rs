@@ -1,5 +1,5 @@
 
-// #![feature(proc_macro_internals)]
+#![feature(proc_macro_internals)]
 #![feature(proc_macro_span)]
 
 use proc_macro::{Span};

@@ -11,6 +11,8 @@ use proc_macro_aoc;
 proc_macro_aoc::import_days!();
 
 
+const YEAR: isize =  2021;
+
 fn main() -> Result<(), ()> {
 
     let days = proc_macro_aoc::instantiate_days!();
@@ -28,7 +30,7 @@ fn main() -> Result<(), ()> {
             continue; // Skip days not asked for
         }
         
-        let input = get_input(i);
+        let input = get_input(YEAR, i);
         let input = input.trim();
         println!("= {} =", i);
         println!("{}", day.part_1(input)?);

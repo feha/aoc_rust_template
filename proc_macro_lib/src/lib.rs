@@ -14,6 +14,7 @@ use glob::glob;
 use regex::Regex;
 use std::collections::HashMap;
 
+
 #[proc_macro]
 pub fn import_days(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut stream = TokenStream::new();
@@ -695,3 +696,50 @@ pub fn impl_day_3(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 //         }
 //     };
 // }
+
+
+
+// I tried asking chatGPT for a solution, and after a lot of nagging at it,
+// and some liberties so I fix some errors it has issues with for it,
+// this is what it got as replacement to import_days:
+struct Input {
+    folder_path: LitStr,
+}
+impl Parse for Input {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let folder_path = input.parse::<LitStr>()?;
+        Ok(Input { folder_path })
+    }
+}
+#[proc_macro]
+pub fn import_folder(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    use syn::{LitStr};
+    
+    // Parse the input TokenStream into a struct
+    let Input { folder_path } = syn::parse_macro_input!(input as Input);
+
+    let mut output = Vec::new();
+    for entry in glob(&format!("{}/day*.rs", folder_path.value())).unwrap().map(Result::unwrap) {
+        let file_path = entry.as_path();
+        let file_name = file_path.file_stem().unwrap().to_str().unwrap();
+        if file_name.len() < 4 {
+            continue;
+        }
+        let file_number: String = file_name.chars().skip(3).collect();
+        let module_path = format!("day{}", file_number).parse::<TokenStream>().unwrap();
+        let padded_module_path = format!("day{:0>2}", file_number).parse::<TokenStream>().unwrap();
+        let statement = if module_path.to_string() == padded_module_path.to_string() {
+            quote! {
+                mod #module_path;
+                use #module_path;
+            }
+        } else {
+            quote! {
+                mod #module_path;
+                use #module_path as #padded_module_path;
+            }
+        };
+        output.extend(statement);
+    }
+    quote!(#(#output)*).into()
+}
