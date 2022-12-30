@@ -27,7 +27,7 @@ pub fn get_session() -> String {
 pub fn get_input_from_aoc(year: usize, day: usize) -> String {
     println!("Fetching input for day {} from AoC.", day);
     let url = format!("{}{}{}{}{}", URL_AOC, year, URL_AOC_DAY, day, URL_AOC_INPUT);
-    let path = format!("{}{}/day{}", PATH_INPUTS, YEAR, day);
+    let path = format!("{}{}/day{}", PATH_INPUTS, year, day);
     let path = Path::new(path.as_str());
 
     let client = reqwest::blocking::Client::new();

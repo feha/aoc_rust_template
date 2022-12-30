@@ -11,7 +11,7 @@ use proc_macro_aoc;
 proc_macro_aoc::import_days!();
 
 
-const YEAR: isize =  2021;
+const YEAR: usize =  2021;
 
 fn main() -> Result<(), ()> {
 
