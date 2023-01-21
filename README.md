@@ -64,6 +64,10 @@ Benchmarks doesn't work in stable. To test benchmarks you need `rustup` AND `car
       > Part 2: Ok("")
       ```
 
+  - > `cargo run --bin fast`
+    * Same as above, except it should (hopefully) compile slightly faster as it only imports latest day.
+    * Not that it normally compiles slowly, but this should hopefully help *if* that happens and becomes an issue or annoyance.
+
   - > `cargo run 1`
     * Executes  the implementations for the given day
     * example output:

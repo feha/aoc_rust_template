@@ -38,6 +38,40 @@ pub fn import_days(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
     return proc_macro::TokenStream::from(stream);
 }
 
+// Same as import_days, except it only imports the file with highest n (aka 'latest' day)
+#[proc_macro]
+pub fn import_latest_day(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let mut stream = TokenStream::new();
+
+    let re = Regex::new(r".+(\d+)").unwrap();
+    let paths: Result<Vec<_>, _> = glob("./src/day*.rs")
+            .expect("Failed to read pattern")
+            .collect();
+    
+    if let Ok(mut paths) = paths {
+        paths.reverse();
+        if paths.is_empty() {
+            return proc_macro::TokenStream::default();
+        }
+        if let Some(path) = paths.get(0) {
+            let prefix = path.file_stem().unwrap().to_str().unwrap();
+            let caps = re.captures(prefix);
+            if let Some(caps) = caps {
+                let n: u32 = caps.get(1).unwrap().as_str().parse().unwrap();
+                let day = &format!("{}", prefix);
+                let day_padded = &format!("day{:0>2}", n);
+
+                stream.extend(format!("mod {};", day).parse::<TokenStream>().unwrap());
+                if n < 10 {
+                    stream.extend(format!("use {} as {};", day, day_padded).parse::<TokenStream>().unwrap());
+                }
+            }
+        }
+    }
+
+    return proc_macro::TokenStream::from(stream);
+}
+
 
 #[proc_macro]
 pub fn instantiate_days(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -68,6 +102,49 @@ pub fn instantiate_days(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
     stream.extend(quote!{
         {
             let mut v: Vec<&dyn Day> = Vec::new();
+            #block
+            v
+        }
+    });
+
+    return proc_macro::TokenStream::from(stream);
+}
+
+// Same as import_days, except only the file with highest n (aka 'latest' day)
+#[proc_macro]
+pub fn instantiate_latest_day(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let re = Regex::new(r".+(\d+)").unwrap();
+    
+    let mut stream = TokenStream::new();
+
+    let mut block  = TokenStream::new();
+    let paths: Result<Vec<_>, _> = glob("./src/day*.rs")
+            .expect("Failed to read pattern")
+            .collect();
+    
+    if let Ok(mut paths) = paths {
+        paths.reverse();
+        if paths.is_empty() {
+            return proc_macro::TokenStream::default();
+        }
+        if let Some(path) = paths.get(0) {
+            let prefix = path.file_stem().unwrap().to_str().unwrap();
+            let caps = re.captures(prefix);
+            if let Some(caps) = caps {
+                let n: u32 = caps.get(1).unwrap().as_str().parse().unwrap();
+                let day_padded = &format!("day{:0>2}", n);
+                let day_padded_upper = &format!("Day{:0>2}", n);
+                let instance = &format!("({}, &{}::{} {{}})", n, day_padded, day_padded_upper).parse::<TokenStream>().unwrap();
+                block.extend(quote!{
+                    v.push( #instance );
+                });
+            }
+        }
+    }
+
+    stream.extend(quote!{
+        {
+            let mut v: Vec<(usize, &dyn Day)> = Vec::new();
             #block
             v
         }
