@@ -97,7 +97,7 @@ Benchmarks doesn't work in stable. To test benchmarks you need `rustup` AND `car
     
   - > `cargo test`
     * Runs all unit-tests.
-    * Take not that they are mostly unordered,
+    * Take note that they are mostly unordered,
        although often they atleast go from day 1 and upwards
     * example output:
       ```console
@@ -124,7 +124,7 @@ Benchmarks doesn't work in stable. To test benchmarks you need `rustup` AND `car
       
   - > `cargo test day1`
     * Runs all unit-tests for the given module.
-    * Take not that they are entirely unordered.
+    * Take note that they are entirely unordered.
     * example output:
       ```console
       > $ cargo test day1
